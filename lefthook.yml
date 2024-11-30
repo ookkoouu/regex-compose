@@ -1,0 +1,23 @@
+# EXAMPLE USAGE:
+#
+#   Refer for explanation to following link:
+#   https://github.com/evilmartians/lefthook/blob/master/docs/configuration.md
+
+pre-commit:
+  parallel: true
+  commands:
+    prettier:
+      glob: "*.{json,md,yml,yaml}"
+      stage_fixed: true
+      run: |
+        npx prettier -w {staged_files}
+    biome:
+      glob: "*.{ts}"
+      stage_fixed: true
+      run: |
+        npx prettier -w {staged_files}
+        npx biome check --write --error-on-warnings -- {staged_files}
+    test:
+      glob: "*.{ts}"
+      run: |
+        npm run test

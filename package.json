@@ -1,0 +1,44 @@
+{
+  "name": "@okou/regex-compose",
+  "version": "0.1.0",
+  "description": "Template literal for composing RegExp.",
+  "type": "module",
+  "author": "okou",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsup",
+    "check": "npm run format & npm run lint & npm run test",
+    "format": "biome check --write && prettier -w .",
+    "lint": "biome check --error-on-warnings",
+    "test": "vitest run --typecheck"
+  },
+  "keywords": [
+    "combinator",
+    "compose",
+    "regex",
+    "regexp",
+    "template"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ookkoouu/regex-compose.git"
+  },
+  "files": [
+    "dist",
+    "src",
+    "tsconfig.json"
+  ],
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@tsconfig/node-lts": "22.0.1",
+    "@types/node": "22.10.1",
+    "lefthook": "1.8.4",
+    "prettier": "3.4.1",
+    "tsup": "8.3.5",
+    "typescript": "5.7.2",
+    "vitest": "2.1.6"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "files": {
+    "include": ["**/*.ts"],
+    "ignore": ["dist"]
+  },
+  "formatter": {
+    "enabled": false
+  },
+  "linter": {
+    "rules": {
+      "correctness": {
+        "noUnusedImports": "warn",
+        "noUnusedFunctionParameters": "warn",
+        "noUnusedVariables": "warn"
+      }
+    }
+  }
+}

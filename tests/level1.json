@@ -1,0 +1,12 @@
+{
+  "str": "json",
+  "num": 1.23,
+  "exp": 1e10,
+  "bool": true,
+  "null": null,
+  "obj": {
+    "a": "a",
+    "b": -123
+  },
+  "arr": ["", -0, false]
+}
