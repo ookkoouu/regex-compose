@@ -1,14 +1,28 @@
 export {
+  between,
+  cap,
+  hasNoPrefix,
+  hasNoSuffix,
+  hasPrefix,
+  hasSuffix,
+  lookAhead,
+  lookBehind,
   many0,
+  many0L,
   many1,
+  many1L,
   maybe,
-  namedCapture,
+  maybeL,
+  modifier,
   ncap,
+  notAhead,
+  notBehind,
   or,
-  r,
-  regex,
-  regexUnicode,
-  ru,
-} from "./compose.ts";
-
-export { RegExpT } from "./types.ts";
+  ref,
+  repeat,
+  repeatL,
+  sepBy,
+  seq,
+  suffix,
+} from "./combinator.ts";
+export { r, regex, setFlag } from "./core.ts";

@@ -1,7 +1,15 @@
 {
-  "extends": "@tsconfig/node-lts/tsconfig.json",
   "compilerOptions": {
+    "strict": true,
+    "target": "ESNext",
+    "module": "Node16",
+    "moduleResolution": "node16",
     "noEmit": true,
-    "allowImportingTsExtensions": true
+    "skipLibCheck": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": true,
+    "noUncheckedIndexedAccess": true,
+    "types": ["vitest/importMeta", "./vitest.d.ts"]
   }
 }
