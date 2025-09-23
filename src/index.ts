@@ -18,11 +18,11 @@ export {
   notAhead,
   notBehind,
   or,
+  quantity,
   ref,
   repeat,
   repeatL,
   sepBy,
   seq,
-  suffix,
 } from "./combinator.ts";
 export { r, regex, setFlag } from "./core.ts";

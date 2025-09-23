@@ -1,20 +1,17 @@
-import { escapeMeta, r } from "./core.ts";
+import { r } from "./core.ts";
 import type { Groups, RegExpT } from "./types.ts";
 
-// #region Basics
-/**
- * なんでも正規表現として結合する
- * 文字列と正規表現以外は通常のテンプレートリテラルと同じ方法で文字列化される
- * 配列は全て平坦化される
- * @param regex
- * @returns
- */
-export function seq<T extends unknown[]>(...regex: T): RegExpT<Groups<T>> {
-  return r(null, regex);
+function escapeMeta(s: string): string {
+  return s.replaceAll(/[.*+?^${}()[\]\\|]/g, "\\$&");
 }
 
-export function or<T extends unknown[]>(...regex: T): RegExpT<Groups<T>> {
-  const sep = regex.reduce<unknown[]>((a, c, i) => {
+// #region Core
+export function seq<T extends unknown[]>(...expr: T): RegExpT<Groups<T>> {
+  return r(null, expr);
+}
+
+export function or<T extends unknown[]>(...expr: T): RegExpT<Groups<T>> {
+  const sep = expr.reduce<unknown[]>((a, c, i) => {
     if (i === 0) {
       a.push(c);
     } else {
@@ -24,57 +21,40 @@ export function or<T extends unknown[]>(...regex: T): RegExpT<Groups<T>> {
   }, []);
   return r`(?:${sep})`;
 }
-
-export function suffix<T extends unknown[]>(
-  suffix: string,
-  ...regex: T
-): RegExpT<Groups<T>> {
-  return r`(?:${seq(regex)})${suffix}`;
-}
-
-export function sepBy<S extends string | RegExpT, T extends unknown[]>(
-  sep: S,
-  ...regex: T
-): RegExpT<Groups<[S, T]>> {
-  return seq(regex, many1(sep, regex));
-}
-
-export function between<S extends string | RegExpT, T extends unknown[]>(
-  aside: S,
-  ...regex: T
-): RegExpT<Groups<[S, T]>> {
-  if (typeof aside === "string") {
-    return seq(escapeMeta(aside), regex, escapeMeta(aside));
-  }
-  return seq(aside, regex, aside);
-}
 // #endregion
 
 // #region Quantifiers
-export function maybe<T extends unknown[]>(...regex: T): RegExpT<Groups<T>> {
-  return suffix("?", regex);
-}
-export function maybeL<T extends unknown[]>(...regex: T): RegExpT<Groups<T>> {
-  return suffix("??", regex);
-}
-
-export function many0<T extends unknown[]>(...regex: T): RegExpT<Groups<T>> {
-  return suffix("*", regex);
-}
-export function many0L<T extends unknown[]>(...regex: T): RegExpT<Groups<T>> {
-  return suffix("*?", regex);
+export function quantity<T extends unknown[]>(
+  quantifier: string,
+  ...expr: T
+): RegExpT<Groups<T>> {
+  return r`(?:${seq(expr)})${quantifier}`;
 }
 
-export function many1<T extends unknown[]>(...regex: T): RegExpT<Groups<T>> {
-  return suffix("+", regex);
+export function maybe<T extends unknown[]>(...expr: T): RegExpT<Groups<T>> {
+  return quantity("?", expr);
 }
-export function many1L<T extends unknown[]>(...regex: T): RegExpT<Groups<T>> {
-  return suffix("+?", regex);
+export function maybeL<T extends unknown[]>(...expr: T): RegExpT<Groups<T>> {
+  return quantity("??", expr);
+}
+
+export function many0<T extends unknown[]>(...expr: T): RegExpT<Groups<T>> {
+  return quantity("*", expr);
+}
+export function many0L<T extends unknown[]>(...expr: T): RegExpT<Groups<T>> {
+  return quantity("*?", expr);
+}
+
+export function many1<T extends unknown[]>(...expr: T): RegExpT<Groups<T>> {
+  return quantity("+", expr);
+}
+export function many1L<T extends unknown[]>(...expr: T): RegExpT<Groups<T>> {
+  return quantity("+?", expr);
 }
 
 export function repeat<T extends unknown[]>(
   count: number | `{${number}}` | `{${number},}` | `{${number},${number}}`,
-  ...regex: T
+  ...expr: T
 ): RegExpT<Groups<T>> {
   if (typeof count === "number" && (!Number.isFinite(count) || count < 0)) {
     throw new RangeError("repeat count must be a positive number");
@@ -85,11 +65,11 @@ export function repeat<T extends unknown[]>(
       : !count.includes("{")
         ? `{${count}}`
         : count;
-  return suffix(_cnt, regex);
+  return quantity(_cnt, expr);
 }
 export function repeatL<T extends unknown[]>(
   count: number | `{${number}}` | `{${number},}` | `{${number},${number}}`,
-  ...regex: T
+  ...expr: T
 ): RegExpT<Groups<T>> {
   if (typeof count === "number" && (!Number.isFinite(count) || count < 0)) {
     throw new RangeError("repeat count must be a positive number");
@@ -100,20 +80,20 @@ export function repeatL<T extends unknown[]>(
       : !count.includes("{")
         ? `{${count}}`
         : count;
-  return suffix(`${_cnt}?`, regex);
+  return quantity(`${_cnt}?`, expr);
 }
 // #endregion
 
 // #region Captures & Refs
-export function cap<T extends unknown[]>(...regex: T): RegExpT<Groups<T>> {
-  return r`(${seq(regex)})`;
+export function cap<T extends unknown[]>(...expr: T): RegExpT<Groups<T>> {
+  return r`(${seq(expr)})`;
 }
 
 export function ncap<T extends string, R extends unknown[]>(
   name: T,
-  ...regex: R
+  ...expr: R
 ): RegExpT<T | Groups<R>> {
-  return r`(?<${name}>${regex})`;
+  return r`(?<${name}>${expr})`;
 }
 
 export function ref(numberOrLabel: number | string): RegExp {
@@ -127,54 +107,69 @@ type ModifiableFlag = "i" | "m" | "s";
 type FlagModifier = ModifiableFlag | `${ModifiableFlag | ""}-${ModifiableFlag}`;
 export function modifier<T extends unknown[]>(
   modifier: FlagModifier,
-  ...regex: T
+  ...expr: T
 ): RegExpT<Groups<T>> {
-  return seq(`(?${modifier}:`, regex, `)`);
+  return seq(`(?${modifier}:`, expr, `)`);
 }
 // #endregion
 
 // #region Assertions
-export function lookAhead<T extends RegExpT[]>(
-  ...regex: T
-): RegExpT<Groups<T>> {
-  return r`(?=${seq(regex)})`;
+export function lookAhead<T extends RegExpT[]>(...expr: T): RegExpT<Groups<T>> {
+  return r`(?=${seq(expr)})`;
 }
-export function notAhead<T extends RegExpT[]>(...regex: T): RegExpT<Groups<T>> {
-  return r`(?!${seq(regex)})`;
+export function notAhead<T extends RegExpT[]>(...expr: T): RegExpT<Groups<T>> {
+  return r`(?!${seq(expr)})`;
 }
 export function lookBehind<T extends RegExpT[]>(
-  ...regex: T
+  ...expr: T
 ): RegExpT<Groups<T>> {
-  return r`(?<=${seq(regex)})`;
+  return r`(?<=${seq(expr)})`;
 }
-export function notBehind<T extends RegExpT[]>(
-  ...regex: T
-): RegExpT<Groups<T>> {
-  return r`(?<!${seq(regex)})`;
+export function notBehind<T extends RegExpT[]>(...expr: T): RegExpT<Groups<T>> {
+  return r`(?<!${seq(expr)})`;
 }
 
 export function hasPrefix<A, T extends unknown[]>(
   prefix: A,
-  ...regex: T
+  ...expr: T
 ): RegExpT<Groups<[A, T]>> {
-  return r`(?<=${prefix})${seq(regex)}`;
+  return r`(?<=${prefix})${seq(expr)}`;
 }
 export function hasNoPrefix<A, T extends unknown[]>(
   prefix: A,
-  ...regex: T
+  ...expr: T
 ): RegExpT<Groups<[A, T]>> {
-  return r`(?<!${prefix})${seq(regex)}`;
+  return r`(?<!${prefix})${seq(expr)}`;
 }
 export function hasSuffix<A, T extends unknown[]>(
   suffix: A,
-  ...regex: T
+  ...expr: T
 ): RegExpT<Groups<[A, T]>> {
-  return r`${seq(regex)}(?=${suffix})`;
+  return r`${seq(expr)}(?=${suffix})`;
 }
 export function hasNoSuffix<A, T extends unknown[]>(
   suffix: A,
-  ...regex: T
+  ...expr: T
 ): RegExpT<Groups<[A, T]>> {
-  return r`${seq(regex)}(?!${suffix})`;
+  return r`${seq(expr)}(?!${suffix})`;
+}
+// #endregion
+
+// #region Utils
+export function sepBy<S extends string | RegExpT, T extends unknown[]>(
+  sep: S,
+  ...expr: T
+): RegExpT<Groups<[S, T]>> {
+  return seq(expr, many1(sep, expr));
+}
+
+export function between<S extends string | RegExpT, T extends unknown[]>(
+  wrapper: S,
+  ...expr: T
+): RegExpT<Groups<[S, T]>> {
+  if (typeof wrapper === "string") {
+    return seq(escapeMeta(wrapper), expr, escapeMeta(wrapper));
+  }
+  return seq(wrapper, expr, wrapper);
 }
 // #endregion

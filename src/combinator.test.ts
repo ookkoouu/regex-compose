@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { between, or, repeat, sepBy, seq, suffix } from "./combinator.ts";
+import { between, or, quantity, repeat, sepBy, seq } from "./combinator.ts";
 import { r } from "./core.ts";
 
 describe("basics", () => {
@@ -17,8 +17,8 @@ describe("basics", () => {
   });
 
   test("suffix", () => {
-    expect(suffix("?", "abc")).toEqualPattern("(?:abc)?");
-    expect(suffix("?", "a", "b", "c")).toEqualPattern("(?:abc)?");
+    expect(quantity("?", "abc")).toEqualPattern("(?:abc)?");
+    expect(quantity("?", "a", "b", "c")).toEqualPattern("(?:abc)?");
   });
 
   test("sepBy", () => {

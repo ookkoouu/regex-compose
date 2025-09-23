@@ -54,7 +54,3 @@ export const r = regex;
 export function setFlag<T extends RegExp>(regexp: T, flags: string): T {
   return new RegExp(regexp.source, flags) as T;
 }
-
-export function escapeMeta(s: string): string {
-  return s.replaceAll(/[.*+?^${}()[\]\\|]/g, "\\$&");
-}
