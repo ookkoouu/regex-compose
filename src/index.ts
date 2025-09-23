@@ -25,4 +25,4 @@ export {
   sepBy,
   seq,
 } from "./combinator.ts";
-export { r, regex, setFlag } from "./core.ts";
+export { flag as setFlag, r, regex } from "./core.ts";

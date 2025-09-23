@@ -45,6 +45,7 @@ c.exec("")?.groups.| // = RegExpT<"aaa"|"bbb"|"ccc">
 // Core
 seq(...expr)               // abc
 or(...expr)                // (?:a|b|c)
+flag(flags, regexp)         // /regexp/flags
 
 // Quantifiers
 quantity(suffix, ...expr)  // (?:...)suffix

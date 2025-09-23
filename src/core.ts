@@ -45,12 +45,18 @@ export function regex<const V extends unknown[]>(
 
 export const r = regex;
 
-/**
- * override flag of RegExp given
- * @param regexp
- * @param flags
- * @returns
- */
-export function setFlag<T extends RegExp>(regexp: T, flags: string): T {
-  return new RegExp(regexp.source, flags) as T;
+const supportedFlags = [..."abcdefghijklmnopqrstuvwxyz"].filter((f) => {
+  try {
+    new RegExp("", f);
+    return true;
+  } catch {
+    return false;
+  }
+});
+
+export function flag<T extends RegExp>(flags: string, regexp: T): T {
+  const filterd = supportedFlags
+    .filter((f) => [...flags, "v"].includes(f))
+    .join("");
+  return new RegExp(regexp.source, filterd) as T;
 }
